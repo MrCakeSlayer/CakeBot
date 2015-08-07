@@ -4,6 +4,8 @@ Cake_Slayer's mIRC Bot!
 Feel free to use or modify!
 (Or suggest changes/additions) :P
 
+Official Testing In #QuickChatz (irc.freenode.net)
+
 *Commands:*
 !help
 !leet
@@ -12,7 +14,12 @@ Feel free to use or modify!
 !quantum
 !rekt
 !version
+!opcmds
+!mutechan
+!unmutechan
+!floodon
+!floodoff
 
-*Features:* Anti Spam (4 Messages In 2 Sec = 2 Minute Ban)
+Flood on/off toggles the Spam Filter
 
-*Planned:* Anti Caps, Curse Filter, Make Bot Able To Reply To Questions
+Basic replies to: "Hello", "Hey", "Hi", "CakesBot"

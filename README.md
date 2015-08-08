@@ -14,6 +14,8 @@ Official Testing In #QuickChatz (irc.freenode.net)
 !quantum
 !rekt
 !version
+!date
+!time
 !opcmds
 !mutechan
 !unmutechan

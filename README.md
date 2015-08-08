@@ -17,9 +17,5 @@ Official Testing In #QuickChatz (irc.freenode.net)
 !opcmds
 !mutechan
 !unmutechan
-!floodon
-!floodoff
-
-Flood on/off toggles the Spam Filter
 
 Basic replies to: "Hello", "Hey", "Hi", "CakesBot"

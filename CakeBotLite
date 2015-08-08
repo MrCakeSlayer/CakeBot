@@ -1,0 +1,369 @@
+mrc
+
+on *:LOAD:{
+  ; This section loads up the required variables
+  ; Please look through it, as there are some things you can change
+  ; that will affect how your bot operates.
+
+  ; Version Info
+
+  ; Name - Give your bot a name!
+  ; This is NOT the bot's nickname. That is up to you to set.
+  ; This is used in the bot's version info.
+  ; Default = Bot Template
+  %bot.name = CakesBot
+
+  ; Author - Your name!
+  ; Default = vsTerminus
+  %bot.author = Cake_Slayer               
+
+  ; Version - Set the bot version
+  ; Default = Bot Template v1.0
+  %bot.version = 1.0
+
+  ; General Config
+
+  ; Owner - You must set this to your nick.
+  ; Default = vsTerminus
+  %bot.owner = Cake_Slayer
+
+  ; Trigger - You can set this to any character that you like
+  ; EXCEPT letters of the alphabet. Anything else should be fine.
+  ; Defatult = !
+  %bot.trigger = !
+
+  ; Miscellaneous
+
+  ; Pacing timer - Limit commands so that they can be used
+  ; a minimum of X seconds apart. Raise or lower this depending on
+  ; What you like, and what feels natural.
+  ; Default = 2
+  %bot.pace = 2
+
+  ; Logging
+  ; You can enable/disable logging of used commands, and modify the file they are logged to here.
+
+  ; Log commands used?
+  ; Default = yes
+  %bot.logCmds = yes
+
+  ; Log file for commands, uses relative pathing.
+  ; Default: logs/commands.log
+  %bot.log = logs/commands.log
+
+  ; Done with variables
+  ; Please do not modify the lines below.
+
+  ; This just primes the pacing. 
+  %bot.nextAllowedCommand = $ctime
+
+  ; This looks for the owner to be online, and stores their host (IP)
+  if ( $address( %bot.owner , 2 ) != $null ) {
+    %bot.owner.address = $address( %bot.owner , 2 )
+  }
+
+  ; Updates the log file
+  if ( %bot.logCmds == yes ) {
+    /write %bot.log ==------ Begin Session ( $+ $time $+ )------==
+  }
+
+  echo -a %bot.name %bot.version by %bot.author loaded successfully.
+}
+
+; ==------------------------------------------------------------------------------------==
+; Aliases
+; These are a few aliases that allow the bot to run correctly
+; Please don't modify unless you know what you're doing.
+; ==------------------------------------------------------------------------------------==
+
+; This checks pacing
+alias allowed {
+  if ( $calc( $ctime - %bot.nextAllowedCommand ) >= 0 ) {
+    %bot.nextAllowedCommand = $calc( $ctime + %bot.pace )
+    return $true
+  }
+  else {
+    return $false
+  }
+}
+
+; Checks to see if the passed in name is an owner or not
+alias owner {
+  if ( $address( $1 , 2 ) == %bot.owner.address ) {
+    return $true
+  }
+  else {
+    return $false
+  } 
+}
+
+; These aliases are used for detecting the user's channel status (Voice, Op, etc)
+/prefixof {
+  if ($1 == $null || $2 == $null) { return $null }
+  var %pnick $nick($1,$2).pnick
+  var %pos $pos(%pnick,$2,1)
+  if (%pos == $null) return $null
+  if (%pos == 1) return $null
+  return $left(%pnick,$calc(%pos - 1))
+}
+/isvoice {
+  if (+ isin $prefixof($1,$2) || $ishalfop($1,$2)) { return $true }
+  return $false
+}
+/ishalfop {
+  if (% isin $prefixof($1,$2) || $ischop($1,$2)) { return $true }
+  return $false
+}
+/ischop {
+  if (@ isin $prefixof($1,$2) || $isadmin($1,$2)) { return $true }
+  return $false
+}
+/isadmin {
+  if ($isowner($1,$2)) return $true
+  if (& == $null) return $false
+  if ($ircdadminchar(prefix) isin $prefixof($1,$2)) return $true
+  return $false
+}
+/isowner {
+  if ($ircdownerchar == $null) return $false
+  if ($ircdownerchar(prefix) isin $prefixof($1,$2)) return $true
+  return $false
+}
+/ircdownerchar {
+  return $iif($1 == prefix,$iif(~ isin $prefix,~,@),q)
+}
+/ircdadminchar {
+  return $iif($1 == prefix,$iif(& isin $prefix,&,@),a)
+}
+
+; ==------------------------------------------------------------------------------------==
+; JOIN event
+; This section is for any commands that you want to be executed when someone joins the chat
+; For now, it just looks for the bot owner and tracks the host (IP)
+; Useful things here are greetings. An example is provided.
+; ==------------------------------------------------------------------------------------==
+on *:JOIN:#:{
+  if ( $nick == %bot.owner ) {
+    %bot.owner.address = $address( $nick , 2 )
+  }
+
+  ; Uncomment the next line for channel greetings for all users!
+  msg $chan Welcome, $nick $+ !
+
+  ; Or, if you just want to welcome voiced or higher users, uncomment the next section instead.
+  ; if ( $isvoice( $chan , $nick ) ) {
+  ;       msg $chan - Welcome, $nick $+ !
+  ;}
+}
+; ==------------------------------------------------------------------------------------==
+; Commands
+; This is where the vast majority of your commands will go.
+; This is also the section you should be editing most frequently.
+; ==------------------------------------------------------------------------------------==
+
+on 1:TEXT:*?trigger:#:{
+  ; This handles displaying the current trigger for users.
+  ; The ? may be substituted for any character.
+  ; Pacing applies.
+
+  if ( ( $allowed ) && ( trigger isin $1 ) ) {
+    msg $chan - My current trigger is: %bot.trigger  
+  }
+
+}
+
+;Default Commands
+on 1:TEXT:!version:#:/msg $chan I am CakesBot V.1 Made by Cake_Slayer
+
+on 1:TEXT:!help:#:/notice $chan All Commands: !help !version !quantum !cake !leet !cookies !rekt !slap !opcmds
+
+on 1:TEXT:!opcmds:#:/notice $chan OP Commands: !mutechan !unmutechan !ban !unban
+
+on 1:TEXT:!quantum:#:/msg $chan QuantumXs is a very weird person!
+
+on 1:TEXT:!cake:#:/msg $chan I love to eat cakes, Do you?
+
+on 1:TEXT:!leet:#:/msg $chan LEET Website: http://leet.cc
+
+on 1:TEXT:!cookies:#:/msg $chan Gave $nick cookies!
+
+;Channel Mute
+on *:TEXT:!mutechan:#: { if ($me isop #) || ($me ishop #) { if ($nick isop #) || ($nick ishop #) {
+      /mode $chan +m
+      /notice $chan 7 The ability to talk has been restricted to users with voice or higher in4 $chan 
+    }
+    else { /notice $nick 7 Command reserved for halfops +  }
+  }
+  else { /notice $nick 4,1 I cannot implement this command unless i am a halfop or higher
+  }
+}
+on *:TEXT:!unmutechan:#: { if ($me isop #) || ($me ishop #) { if ($nick isop #) || ($nick ishop #) {
+      /mode $chan -m
+      /notice $chan 7 The ability talk is now available for all users in4 $chan 
+    }
+    else { /notice $nick 7 Command reserved for halfops +  }
+  }
+  else { /notice $nick 4,1 I cannot implement this command unless i am a halfop or higher
+  }
+}
+
+;Ban test
+on *:TEXT:!ban*:#: { if ($me isop #) || ($me ishop #) { if ($nick isop #) || ($nick ishop #) {
+      /mode $chan +b $2
+    }
+    else { /notice $nick 7 Command reserved for fullops  }
+  }
+  else { /notice $nick 4,1 I cannot implement this command unless i am a fullop
+  }
+}
+on *:TEXT:!unban*:#: { if ($me isop #) || ($me ishop #) { if ($nick isop #) || ($nick ishop #) {
+      /mode $chan -b $2
+    }
+    else { /notice $nick 7 Command reserved for fullops  }
+  }
+  else { /notice $nick 4,1 I cannot implement this command unless i am a fullop
+  }
+}
+
+;Slap
+on *:TEXT:!slap*:#:{
+  var %slap = $rand(1,10) 
+  if (%slap == 1)  /describe $chan slaps $2 around a bit with a small jellyfish
+  if (%slap == 2)  /describe $chan Slaps $2 around a bit with a bowling ball
+  if (%slap == 3)  /describe $chan Slaps $2 around a bit with a piece of driftwood
+  if (%slap == 4)  /describe $chan Slaps $2 around a bit with a flat panel television
+  if (%slap == 5)  /describe $chan Slaps $2 around a bit with a rusty spoon
+  if (%slap == 6)  /describe $chan Slaps $2 around a bit with a sack of retarded squirrels
+  if (%slap == 7)  /describe $chan Slaps $2 around a bit with a bowl of 5 alarm chili
+  if (%slap == 8)  /describe $chan Slaps $2 around a bit with the shoe from monopoly
+  if (%slap == 9)  /describe $chan Slaps $2 around a bit with a broken doorknob
+  if (%slap == 10) /describe $chan Slaps $2 around a bit with a wet diaper
+}
+
+;Rekt (user)
+on *:TEXT:!rekt*:#:{
+  var %rekt = $rand(1,1) 
+  if (%rekt == 1)  /describe $chan rekt $2!
+}
+
+on 1:TEXT:$( * $+ %bot.trigger $+ * ):#:{
+
+  ; Welcome to the text command section
+  ; This section is for commands such as !topic, which are issued in the channel
+  ; A few example are provided for you, and the structure for you to add your own commands is explained
+
+  ; Get the command the user issued
+  ; Strip codes from the message first
+  ; Then grab just the first word
+  ; Then remove any instances of the trigger from the word.
+  ; This leaves you with the command text only. 
+  ; This is also why I suggest you to not use A-Z,a-z in your triggers.
+  var %command = $replace( $gettok( $strip( $1- ) , 1 , 32 ) , %bot.trigger, $null )
+
+  if ( $owner( $nick ) ) {
+    ; This is where commands that are restricted for your use only go.
+
+    ; Example Provided: SAY - Make the bot say something
+    if ( %command == say ) {
+      msg $chan $2-
+    }
+
+    ; Define more commands for yourself (The bot owner) here!
+
+  }
+
+  if ( $allowed ) {
+    ; This section is for 'public' commands.
+    ; These commands ARE subject to pacing, even for the bot owner.
+
+    ; One for each level of access: Regular User, Voiced User (+), Halfop (%), Full Op (@), and Admin (&)
+
+    ; First section: Voiced users
+    if ( $isvoice( $chan , $nick ) ) {
+
+      ; Example Command: rules
+      if ( %command == rules ) {
+        msg $chan The rules are: Behave!
+      }
+
+      ; Define more commands for voiced users here!
+
+    }
+
+    ; Second section: Halfops
+    if ( $ishalfop( $chan , $nick ) ) {
+
+      ; Example Command: MUTE - Mute the channel (mode +m)
+      if ( %command == mute ) {
+        if ( $2 == on ) {
+          mode $chan +m
+          msg $chan - Channel is now muted 
+        }
+        elseif ( $2 == off ) {
+          mode $chan -m
+          msg $chan - Channel is no longer muted
+        }
+        else {
+          msg $chan - Please use %bot.trigger $+ mute on or %bot.trigger $+ mute off
+        }
+      }
+
+      ; Define more commands for halfops here!
+
+    }
+
+    ; Third section: Full ops
+    ;if ( $ischop( $chan , $nick ) ) {
+
+    ; Example command: Kickban (or kb)
+    ; if ( ( %command == kb ) || ( %command == kickban ) ) {
+    ;  mode $chan +b $address( $2 , 2 )
+    ;  kick $chan $2 ( $+ $nick $+ ) $3-
+    ;}
+
+    ; Define more commands for full ops here!
+
+    ;}
+
+    ; Fourth section: Admins
+    if ( $isadmin( $chan , $nick ) ) {
+
+      ; Example command: LEAVE - Make the bot leave the channel
+      if ( %command == leave ) {
+        part $chan Leaving the channel at request of $nick
+      }
+
+      ; Define more commands for admins here!
+
+    }
+
+    ; Final section: All users.
+
+    if ( %command == somethingsuperpointlessbecauseidontneedthishere ) {
+      msg $chan Fuck this
+    }
+
+    ; Define more commands for regular users here!
+
+  }
+  ; Now all we have to do is log the command use
+  ; This logs ALL command attempts, whether they are executed or not (due to pacing)
+  ; This way you can identify people who are trying to spam the bot.
+  if ( %bot.logCmds == yes ) { 
+    /write %bot.log ( $+ $time $+ ) $chan $+ : < $+ $nick $+ > $strip( $1- )
+  }
+}
+
+; ==------------------------------------------------------------------------------------==
+; There are plenty of other events you could script into your bot
+; Have a look at the mIRC help docs and use google. You'll find other stuff you can add.
+; Perhaps in future versions of this template I'll provide example of more event types.
+; ==------------------------------------------------------------------------------------==
+
+on *:UNLOAD:{
+  if ( %bot.logCmds == yes ) {
+    /write %bot.log ==------ End Session ( $+ $time $+ )------==
+  }
+  echo -a %bot.name %bot.version by %bot.author unloaded successfully.
+  /unset %bot.*
+}

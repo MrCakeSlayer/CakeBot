@@ -127,11 +127,11 @@ def Main():
         if ircmsg.find ("Ping") != -1:
             sendmsg(channel, "PONG! \n")
  
-        if ircmsg.find ("!rekt") != -1:
-            sendmsg(channel, " rekt $nick! \n")
+        if ircmsg.find ("!rekt str_split [1]") != -1:
+            sendmsg(channel, " rekt str_split [1] \n")
 
-        if ircmsg.find ("!slap") != -1:
-            sendmsg(channel, " slapped $nick with a large trout! \n")
+        if ircmsg.find ("!slap str_split [1]") != -1:
+            sendmsg(channel, " slapped str_split [1] with a large trout! \n")
   
         if ircmsg.find ("!quantum") != -1:
             sendmsg(channel, "QuantumXs is a very weird person! \n")

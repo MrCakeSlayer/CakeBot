@@ -1,0 +1,174 @@
+# ==------------------------------------------------------------------------------------==
+# ORIGINAL CODE BY QUANTUMXS (INCOGNITO), This code was just modified to matche the same
+# replies & commands used on the original CakesBot!
+# ==------------------------------------------------------------------------------------==
+import re, socket, os
+# ==------------------------------------------------------------------------------------==
+# Constraints 
+# ==------------------------------------------------------------------------------------==
+zero      = 0                   # Zero
+one       = 1                   # One
+false     = 0                   # Boolean False
+true      = 1                   # Boolean True
+# ==------------------------------------------------------------------------------------==
+# Bot Info
+# ==------------------------------------------------------------------------------------==
+botnick    = "CakesBot"
+bufsize    = 2048
+channel    = "#QuickChatz"
+port       = 6667
+server     = "irc.freenode.net"
+master     = "Cake_Slayer"
+uname      = "CakesBot"
+realname   = "CakesBot"
+# ==------------------------------------------------------------------------------------==
+# Replies Dictionary
+# ==------------------------------------------------------------------------------------==
+Replies = dict()
+Replies ['die'      ] = "No, you."
+# ==------------------------------------------------------------------------------------==
+# Ping Subroutine
+# ==------------------------------------------------------------------------------------==
+def ping():
+    global ircsock
+    ircsock.send ("PONG :pingis\n")
+# ==------------------------------------------------------------------------------------==
+# Msg Subroutine
+# ==------------------------------------------------------------------------------------==
+def sendmsg (chan, msg):
+    global ircsock
+    ircsock.send ("PRIVMSG "+ chan +" :"+ msg + "\n")
+# ==------------------------------------------------------------------------------------==
+# JoinChan Subroutine
+# ==------------------------------------------------------------------------------------==
+def JoinChan (chan):
+    global ircsock
+    ircsock.send ("JOIN "+ chan +"\n")
+# ==------------------------------------------------------------------------------------==
+# ProcHello Subroutine
+# ==------------------------------------------------------------------------------------==
+def ProcHello():
+    global ircsock
+    ircsock.send ("PRIVMSG "+ channel +" :Hello!\n")
+# ==------------------------------------------------------------------------------------==
+# Main Routine
+# ==------------------------------------------------------------------------------------==
+def Main():
+    global ircsock, Replies
+                                # Set up a couple of reply patterns
+    pattern1 = '.*:(\w+)\W*%s\W*$' % (botnick)
+    pattern2 = '.*:%s\W*(\w+)\W*$' % (botnick)
+
+                                # Create a network socket
+    ircsock = socket.socket (socket.AF_INET, socket.SOCK_STREAM)
+                                # Connect to server
+    ircsock.connect ((server, port))
+                                # Authenticate
+
+    ircsock.send ("USER " + uname + " 2 3 " + realname + "\n")
+
+                                # Assign nick
+    ircsock.send ("NICK "+ botnick + "\n")
+    # Auth to nickserv, uncomment this if needed and change password to the nickserv password
+    #ircsock.send ("PRIVMSG NickServ :identify Passwd\n")
+    JoinChan (channel)          # Join channel
+
+    while true:                 # Main loop
+                                # Receive data from server
+        ircmsg = ircsock.recv (bufsize)
+                                # Remove newlines
+        ircmsg = ircmsg.strip ('\n\r')
+
+        print ircmsg            # Echo the input
+                                # Let the bot be a little chatty
+                                # Something like "Hello, Bot" ?
+        m1 = re.match (pattern1, ircmsg, re.I)
+        m2 = re.match (pattern2, ircmsg, re.I)
+        if ((m1 == None) and (m2 != None)): m1 = m2
+
+        if (m1 != None):        # Yes
+            word = m1.group (1) # Word found
+            word = word.lower() # Make word lower case
+                                # Print a reply
+            if (word in Replies):
+                sendmsg (channel, Replies [word])
+
+                                # If the server  pings us,  then we've
+                                # got to respond!
+        if ircmsg.find ("PING :") != -1:
+            ping()
+# ==------------------------------------------------------------------------------------==
+# Help Command
+# ==------------------------------------------------------------------------------------==
+        if ircmsg.find ("!help") != -1:
+            sendmsg (channel, "OP Commands: !mutechan !unmutechan !ban !unban !voice !devoice !topic\n")
+            sendmsg (channel, "Fun Commands: !quantum !cake !leet !cookies !rekt !slap\n")
+            sendmsg (channel, "Info Commands: !version !date !github\n")
+# ==------------------------------------------------------------------------------------==
+# Replies
+# ==------------------------------------------------------------------------------------==
+        if ircmsg.find ("Hello CakesBot") != -1:
+            sendmsg(channel, "Hello! \n")
+
+          if ircmsg.find ("Hey CakesBot") != -1:
+            sendmsg(channel, "Hello! \n")
+
+        if ircmsg.find ("Hi CakesBot") != -1:
+            sendmsg(channel, "Hello! \n")
+# ==------------------------------------------------------------------------------------==
+# General Commands
+# ==------------------------------------------------------------------------------------==
+        if ircmsg.find (":!info") != -1:
+            sendmsg(channel, "I am CakesBot V.1 Made by Cake_Slayer. \n")
+
+        if ircmsg.find (":!github") != -1:
+            sendmsg(channel, "I am open source: https://github.com/CakeSlayer/CakeBot/ \n")
+
+        if ircmsg.find ("Ping") != -1:
+            sendmsg(channel, "PONG! \n")
+  
+          if ircmsg.find ("!quantum") != -1:
+            sendmsg(channel, "QuantumXs is a very weird person! \n")
+  
+          if ircmsg.find ("!cake") != -1:
+            sendmsg(channel, "I love to eat cakes, Do you? \n")
+  
+         if ircmsg.find ("!leet") != -1:
+            sendmsg(channel, "LEET Website: http://leet.cc \n")
+# ==------------------------------------------------------------------------------------==
+# Voice Command
+# ==------------------------------------------------------------------------------------==
+        if ircmsg.find (":!voice") != -1:
+            str_split = ircmsg.split ("!voice ")
+            ircsock.send ("MODE " + channel + " +v " + str_split [1] + "\n")
+            sendmsg (master, "Voiced " + str_split [1] + ".")
+
+        if ircmsg.find (":!devoice") != -1:
+            str_split = ircmsg.split ("!devoice ")
+            ircsock.send ("MODE " + channel + " -v " + str_split [1] + "\n")
+            sendmsg (master, "Removed voice on " + str_split [1] + ".")
+
+# ==------------------------------------------------------------------------------------==
+# Topic
+# ==------------------------------------------------------------------------------------==
+        if ircmsg.find (":!topic") != -1:
+            str_split = ircmsg.split ("!topic ")
+            ircsock.send ("TOPIC " + channel + " " + str_split [1] + "\n")
+            sendmsg (master, "Topic set to: " + str_split [1] + ".")
+# ==------------------------------------------------------------------------------------==
+# Ban Command
+# ==------------------------------------------------------------------------------------==
+        if ircmsg.find (":!ban") != -1:
+            str_split = ircmsg.split ("!ban ")
+            ircsock.send ("MODE " + channel + " +b " + str_split [1] + "\n")
+            sendmsg (master, "Banned " + str_split [1] + ".")
+
+        if ircmsg.find (":!unban") != -1:
+            str_split = ircmsg.split ("!unban ")
+            ircsock.send ("MODE " + channel + " -b " + str_split [1] + "\n")
+            sendmsg (master, "Pardoned " + str_split [1] + ".")
+# ==------------------------------------------------------------------------------------==
+# EXIT
+# ==------------------------------------------------------------------------------------==
+Main()
+exit (zero)

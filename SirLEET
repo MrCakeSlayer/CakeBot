@@ -1,0 +1,66 @@
+mrc
+
+on *:LOAD:{
+
+  ; ==------------------------------------------------------------------------------------==
+  ; General Info
+  ; ==------------------------------------------------------------------------------------==
+  %bot.name = SirLEET
+  %bot.author = Cake_Slayer               
+  %bot.version = 1.0
+  %bot.owner = Cake_Slayer
+  %bot.trigger = !
+  ; ==------------------------------------------------------------------------------------==
+  ; Misc Info
+  ; ==------------------------------------------------------------------------------------==
+  %bot.pace = 2
+  %bot.logCmds = yes
+  %bot.log = logs/commands.log
+
+  ; ==------------------------------------------------------------------------------------==
+  ; DO NOT MODIFY
+  ; ==------------------------------------------------------------------------------------== 
+  %bot.nextAllowedCommand = $ctime
+
+  ; This looks for the owner to be online, and stores their host (IP)
+  if ( $address( %bot.owner , 2 ) != $null ) {
+    %bot.owner.address = $address( %bot.owner , 2 )
+  }
+
+  ; Updates the log file
+  if ( %bot.logCmds == yes ) {
+    /write %bot.log ==------ Begin Session ( $+ $time $+ )------==
+  }
+
+  echo -a %bot.name %bot.version by %bot.author loaded successfully.
+}
+
+; ==------------------------------------------------------------------------------------==
+; Welcome Join Message, Auto join on invite, Auto join on kick, & Unban lvl 10 users
+; ==------------------------------------------------------------------------------------==
+on *:JOIN:#:{
+  if ( $nick == %bot.owner ) {
+    %bot.owner.address = $address( $nick , 2 )
+  }
+  msg $chan Welcome, $nick $+ type /query SirLEET for help!
+}
+on 10:INVITE:#:/join $chan
+on 10:BAN:#:/mode $chan -b $banmask
+on 1:TEXT:*:?:/msg $nick Im not setup for private messages yet!
+on *:kick:#:{
+  if ($knick == $me) { join # | inc %kick | msg $chan I've been kicked %kick times :P }
+}
+; ==------------------------------------------------------------------------------------==
+; Auto Replies
+; ==------------------------------------------------------------------------------------==
+on 1:TEXT:*:?:/msg $nick Hello! What category is your issue in?
+; ==------------------------------------------------------------------------------------==
+; UNLOAD
+; ==------------------------------------------------------------------------------------==
+on *:UNLOAD:{
+  if ( %bot.logCmds == yes ) {
+    /write %bot.log ==------ End Session ( $+ $time $+ )------==
+  }
+  echo -a %bot.name %bot.version by %bot.author unloaded successfully.
+  /unset %bot.*
+}
